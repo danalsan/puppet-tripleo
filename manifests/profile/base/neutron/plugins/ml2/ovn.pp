@@ -16,19 +16,33 @@
 #
 # OVN Neutron ML2 profile for tripleo
 #
+# [*ovn_db_host*]
+#   The IP-Address where OVN DBs are listening.
+#   Defaults to hiera('ovn_dbs_vip')
+#
+# [*ovn_nb_port*]
+#   (Optional) Port number on which northbound database is listening
+#   Defaults to hiera('ovn::northbound::port')
+#
+# [*ovn_sb_port*]
+#   (Optional) Port number on which southbound database is listening
+#   Defaults to hiera('ovn::southbound::port')
+#
 # [*step*]
 #   (Optional) The current step in deployment. See tripleo-heat-templates
 #   for more details.
 #   Defaults to hiera('step')
 #
 class tripleo::profile::base::neutron::plugins::ml2::ovn (
+  $ovn_db_host = hiera('ovn_dbs_vip'),
+  $ovn_nb_port = hiera('ovn::northbound::port'),
+  $ovn_sb_port = hiera('ovn::southbound::port'),
   $step        = Integer(hiera('step'))
 ) {
   if $step >= 4 {
-    include ::tripleo::profile::base::ovn_params
     class { '::neutron::plugins::ml2::ovn':
-      ovn_nb_connection => $tripleo::profile::base::ovn_params::ovn_nb_connection,
-      ovn_sb_connection => $tripleo::profile::base::ovn_params::ovn_sb_connection,
+      ovn_nb_connection => "tcp:${ovn_db_host}:${ovn_nb_port}",
+      ovn_sb_connection => "tcp:${ovn_db_host}:${ovn_sb_port}",
     }
   }
 }
